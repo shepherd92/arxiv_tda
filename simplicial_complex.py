@@ -11,6 +11,8 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 
+DIMENSION = 400
+
 class SimplicialComplex:
     """This class represents a simplicial complex."""
 
@@ -32,8 +34,26 @@ class SimplicialComplex:
                     face_counts[tuple(sorted(face))] += 1
 
         self.simplex_tree.set_dimension(self.max_dimension)
-        for face, count in tqdm(face_counts.items(), desc='Inserting simplices', delay=1):
-            self.simplex_tree.insert(face, filtration=50 - count)
+        for face, count in tqdm(face_counts.items(), desc='Inserting simplices', delay=5):
+            self.simplex_tree.insert(face, filtration=30 - count)
+
+        self.simplex_tree.make_filtration_non_decreasing()
+
+    def build_field_complex(self, documents: pd.DataFrame) -> None:
+        documents_copy = documents[['authors', 'category']].groupby('category').agg(sum).apply(lambda row: set(row['authors']), axis=1)
+
+        indices = list(range(len(documents_copy)))
+
+        self.simplex_tree.set_dimension(self.max_dimension)
+        for dimension in range(4):
+            for simplex in combinations(indices, dimension + 1):
+                authors_in_intersection: set[int] = documents_copy.iloc[simplex[0]]
+                if len(simplex) == 1:
+                    continue
+                for index in simplex[1:]:
+                    authors_in_intersection = authors_in_intersection.intersection(documents_copy.iloc[index])
+                weight = DIMENSION - len(authors_in_intersection)
+                self.simplex_tree.insert(simplex, filtration=weight)
 
         self.simplex_tree.make_filtration_non_decreasing()
 
@@ -44,11 +64,13 @@ class SimplicialComplex:
         finite_pts = [pt for pt in self._persistence if pt[1][1] != float('inf')]
         inf_pts = [pt for pt in self._persistence if pt[1][1] == float('inf')]
 
+        colors = ['blue', 'red', 'green']
+
         # Plot finite points by dimension
         for dim in set(d for d, _ in finite_pts):
             xs = [b for d, (b, dth) in finite_pts if d == dim]
             ys = [dth for d, (b, dth) in finite_pts if d == dim]
-            axes.scatter(xs, ys, label=f"H{dim}")
+            axes.scatter(xs, ys, label=f"H{dim}", c=colors[dim])
 
         # Compute data range
         all_births = [b for _, (b, _) in self._persistence if b != float('inf')]
@@ -74,7 +96,7 @@ class SimplicialComplex:
             for dim in set(d for d, _ in inf_pts):
                 xs = [b for d, (b, _) in inf_pts if d == dim]
                 ys = [inf_y for _ in xs]
-                axes.scatter(xs, ys, marker='^')  # no label
+                axes.scatter(xs, ys, marker='^', c=colors[dim])  # no label
 
         # Plot diagonal
         axes.plot([total_min, total_max], [total_min, total_max], "k--", alpha=0.5)

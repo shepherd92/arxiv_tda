@@ -9,10 +9,10 @@ import pandas as pd
 
 from arxiv_categories import ArxivCategory
 from data_set import DataSet
-from simplicial_complex import SimplicialComplex
+from simplicial_complex import SimplicialComplex, DIMENSION
 
 
-MAX_SIMPLEX_DIMENSION = 2  # maximum dimension of the simplices to be created; beware of combinatorial explosion
+MAX_SIMPLEX_DIMENSION = 3  # maximum dimension of the simplices to be created; beware of combinatorial explosion
 DATA_SET_PARAMETERS = DataSet.Parameters(
     date_interval=(pd.Timestamp('1900-01-01', tz='UTC'), pd.Timestamp('2025-01-01', tz='UTC')),  # filter for other dates
     categories=[ArxivCategory.ALL],  # filter for other categories, look at arxiv_categories.py
@@ -50,9 +50,10 @@ def main(data_set_parameters: DataSet.Parameters) -> None:
             continue
 
         simplicial_complex = SimplicialComplex(MAX_SIMPLEX_DIMENSION)
-        simplicial_complex.build(current_data)
+        simplicial_complex.build_field_complex(current_data)
         simplicial_complex.compute_persistence()
-        persistence_diagram : plt.Figure = simplicial_complex.create_persistence_diagram(x_min=0., y_min=0., x_max=50., y_max=50.)
+        persistence_diagram : plt.Figure = simplicial_complex.create_persistence_diagram(x_min=0., y_min=0., x_max=DIMENSION, y_max=DIMENSION)
+        persistence_diagram.suptitle(f'Persistence Diagram for {interval[0].year}-{interval[0].month}-{interval[0].day} - {interval[1].year}-{interval[1].month}-{interval[1].day}')
 
         persistence_diagram.savefig(output_dir / f'persistence_diagram_{interval[0].year}_{interval[0].month}_{interval[0].day}.png')
 
