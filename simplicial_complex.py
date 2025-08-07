@@ -31,11 +31,9 @@ class SimplicialComplex:
                 for face in combinations(simplex, min(face_dimension + 1, self.max_dimension + 1)):
                     face_counts[tuple(sorted(face))] += 1
 
-        max_face_count = max(face_counts.values())
-
         self.simplex_tree.set_dimension(self.max_dimension)
         for face, count in tqdm(face_counts.items(), desc='Inserting simplices', delay=1):
-            self.simplex_tree.insert(face, filtration=max_face_count - count)
+            self.simplex_tree.insert(face, filtration=50 - count)
 
         self.simplex_tree.make_filtration_non_decreasing()
 

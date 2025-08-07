@@ -41,7 +41,7 @@ def main(data_set_parameters: DataSet.Parameters) -> None:
     for interval in intervals:
         dataset_properties = DataSet.Parameters(
             date_interval=interval,
-            categories=[ArxivCategory.math_PR],
+            categories=[ArxivCategory.ALL],
             max_num_of_authors=10
         )
         current_data = data_set.get_data(dataset_properties)
