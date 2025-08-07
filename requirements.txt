@@ -1,0 +1,5 @@
+gudhi
+matplotlib
+pandas
+pip
+tqdm
